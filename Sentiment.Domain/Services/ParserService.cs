@@ -10,6 +10,7 @@ namespace Sentiment.Domain.Services
         private readonly List<CommentData> _data = new List<CommentData>();
         private HttpClient _client = new HttpClient();
         private JObject _jObj = new JObject();
+        private SentimentalService _sentimental = new SentimentalService();
 
         public async Task<List<CommentData>> GetCommentsData(string url)
         {
@@ -66,11 +67,13 @@ namespace Sentiment.Domain.Services
         {
             for (int i = 0; i < countPages; i++)
             {
+                string comment = _jObj.SelectToken($"items[{i}].snippet.topLevelComment.snippet.textDisplay")
+                                  .Value<string>();
+
                 _data.Add(new CommentData
                 {
-                    Comment = _jObj.SelectToken($"items[{i}].snippet.topLevelComment.snippet.textDisplay")
-                                  .Value<string>(),
-                    IsPositive = true,
+                    Comment = comment,
+                    IsPositive = _sentimental.GetSentimantal(comment),
                     Person = _jObj.SelectToken($"items[{i}].snippet.topLevelComment.snippet.authorDisplayName")
                                   .Value<string>(),
                     PersonUrl = _jObj.SelectToken($"items[{i}].snippet.topLevelComment.snippet.authorChannelUrl")
